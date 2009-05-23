@@ -10,7 +10,7 @@
 Summary:        Authentication and encryption extension for Mozilla Thunderbird
 Name:           thunderbird-enigmail
 Version:        0.95.7
-Release:        1%{?dist}
+Release:        1%{?dist}.1
 URL:            http://enigmail.mozdev.org/
 License:        MPLv1.1 or GPLv2+
 Group:          Applications/Internet
@@ -272,6 +272,9 @@ fi
 #===============================================================================
 
 %changelog
-* Sat May 23 2009 Remi Collet <rpms@famillecollet.com> 0.95.7-1
+* Sat May 23 2009 Remi Collet <rpmfusion@famillecollet.com> 0.95.7-1.fc10.1
+- fix mozconfig
+
+* Sat May 23 2009 Remi Collet <rpmfusion@famillecollet.com> 0.95.7-1
 - Initial rpmfusion RPM
 
