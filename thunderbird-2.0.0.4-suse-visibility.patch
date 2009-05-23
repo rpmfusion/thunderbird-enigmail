@@ -1,0 +1,11 @@
+--- configure.orig	2007-06-07 15:53:57.000000000 +0200
++++ configure	2007-06-07 15:55:00.000000000 +0200
+@@ -7949,7 +7949,7 @@
+                       if ${CC-cc} -Werror -S conftest.c -o conftest.s >/dev/null 2>&1; then
+                         if egrep '\.(hidden|extern_private).*foo_hidden' conftest.s >/dev/null; then
+                           if ! egrep '\.(hidden|extern_private).*foo_default' conftest.s > /dev/null; then
+-                            ac_cv_visibility_pragma=yes
++                            ac_cv_visibility_pragma=no
+                           fi
+                         fi
+                       fi
