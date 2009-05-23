@@ -272,9 +272,9 @@ fi
 #===============================================================================
 
 %changelog
-* Sat May 23 2009 Remi Collet <rpmfusion@famillecollet.com> 0.95.7-1.fc10.1
+* Sat May 23 2009 Remi Collet <rpms@famillecollet.com> 0.95.7-1.fc10.1
 - fix mozconfig
 
-* Sat May 23 2009 Remi Collet <rpmfusion@famillecollet.com> 0.95.7-1
+* Sat May 23 2009 Remi Collet <rpms@famillecollet.com> 0.95.7-1
 - Initial rpmfusion RPM
 
