@@ -10,7 +10,7 @@
 Summary:        Authentication and encryption extension for Mozilla Thunderbird
 Name:           thunderbird-enigmail
 Version:        0.96.0
-Release:        1%{?dist}
+Release:        2%{?dist}
 URL:            http://enigmail.mozdev.org/
 License:        MPLv1.1 or GPLv2+
 Group:          Applications/Internet
@@ -23,7 +23,6 @@ Source100:  http://www.mozilla-enigmail.org/downloads/src/enigmail-%{version}.ta
 
 # From sunbird.src.rpm
 Source102: mozilla-extension-update.sh
-
 
 # Build patches
 Patch1:         firefox-2.0-link-layout.patch
@@ -57,6 +56,8 @@ Patch112:       thunderbird-2.0-enable-debug.patch
 
 # Specific enigmail, to avoid : hidden symbol NS_NewGenericModule2
 Patch200:       thunderbird-2.0.0.4-suse-visibility.patch
+# To have TARGET_XPCOM_ABI defined on ppc64
+Patch201:       thunderbird-ppc64.patch
 
 %if %{official_branding}
 # Required by Mozilla Corporation
@@ -123,6 +124,7 @@ cd mozilla
 
 # to avoid : hidden symbol NS_NewGenericModule2
 %patch200 -p0 -b .visibility
+%patch201 -p0 -b .ppc64
 
 %patch10 -p1 -b .psfonts
 %patch11 -p1 -b .gnome-uriloader
@@ -173,6 +175,7 @@ popd
 # ===== Enigmail work =====
 tar xzf %{SOURCE100}
 mv enigmail mailnews/extensions/
+
 
 #===============================================================================
 
@@ -270,6 +273,9 @@ fi
 #===============================================================================
 
 %changelog
+* Sat Jul 18 2009 Remi Collet <rpmfusion@famillecollet.com> 0.96.0-2
+- add a ppc64 patch (TARGET_XPCOM_ABI must be defined for enigmail)
+
 * Sat Jul 18 2009 Remi Collet <rpmfusion@famillecollet.com> 0.96.0-1
 - update to 0.96.0 (thunderbird 2 only)
 
