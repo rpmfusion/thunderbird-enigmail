@@ -9,8 +9,8 @@
 
 Summary:        Authentication and encryption extension for Mozilla Thunderbird
 Name:           thunderbird-enigmail
-Version:        0.95.7
-Release:        1%{?dist}.1
+Version:        0.96.0
+Release:        1%{?dist}
 URL:            http://enigmail.mozdev.org/
 License:        MPLv1.1 or GPLv2+
 Group:          Applications/Internet
@@ -84,8 +84,6 @@ BuildRequires:  desktop-file-utils
 BuildRequires:  freetype-devel
 BuildRequires:  libXt-devel
 BuildRequires:  libXrender-devel
-
-Requires:       gnupg, thunderbird = %{thunver}
 
 %define mozappdir %{_libdir}/thunderbird-%{thunver}
 
@@ -272,6 +270,9 @@ fi
 #===============================================================================
 
 %changelog
+* Sat Jul 18 2009 Remi Collet <rpmfusion@famillecollet.com> 0.96.0-1
+- update to 0.96.0 (thunderbird 2 only)
+
 * Sat May 23 2009 Remi Collet <rpmfusion@famillecollet.com> 0.95.7-1.fc10.1
 - fix mozconfig
 
