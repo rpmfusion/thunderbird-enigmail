@@ -1,34 +1,41 @@
-%define nspr_version 4.6
-%define nss_version 3.10
-%define cairo_version 1.0
-%define dbus_glib_version 0.6
+%global nspr_version 4.6
+%global nss_version 3.10
+%global cairo_version 1.0
+%global dbus_glib_version 0.6
 
-%define official_branding 1
+%global official_branding 1
 
-%define thunver    3.0
+%global thunver    3.0
+%global thunbeta   b3
 
-%define CVS 20090521
+%global CVS 20090721
 
 Summary:        Authentication and encryption extension for Mozilla Thunderbird
 Name:           thunderbird-enigmail
-Version:        0.96a
-Release:        0.3.cvs%{CVS}%{?dist}
+Version:        0.97a
+%if 0%{?CVS}
+Release:        0.1.cvs%{CVS}%{?dist}
+%else
+Release:        1%{?dist}
+%endif
 URL:            http://enigmail.mozdev.org/
 License:        MPLv1.1 or GPLv2+
 Group:          Applications/Internet
-Source0:        http://releases.mozilla.org/pub/mozilla.org/thunderbird/releases/%{thunver}/source/thunderbird-%{thunver}b2-source.tar.bz2
+Source0:        http://releases.mozilla.org/pub/mozilla.org/thunderbird/releases/%{thunver}/source/thunderbird-%{thunver}%{?thunbeta}-source.tar.bz2
 
 Source10:       thunderbird-mozconfig
 Source11:       thunderbird-mozconfig-branded
 
 # ===== Enigmail files =====
-#Source100:  http://www.mozilla-enigmail.org/downloads/src/enigmail-%{version}.tar.gz
-
+%if 0%{?CVS}
 # cvs -d :pserver:guest@mozdev.org:/cvs login
 # => password is guest 
 # cvs -d :pserver:guest@mozdev.org:/cvs co enigmail/src
-# tar czf /home/rpmbuild/SOURCES/enigmail-20090521.tgz -C enigmail/src .
-Source100: enigmail-%{CVS}.tgz
+# tar czf /home/rpmbuild/SOURCES/enigmail-20090721.tgz --exclude CVS -C enigmail/src .
+Source100:      enigmail-%{CVS}.tgz
+%else
+Source100:      http://www.mozilla-enigmail.org/downloads/src/enigmail-%{version}.tar.gz
+%endif
 
 # http://www.mozdev.org/pipermail/enigmail/2009-April/011018.html
 Source101: enigmail-fixlang.php
@@ -39,9 +46,7 @@ Source102: mozilla-extension-update.sh
 # Build patches
 Patch1:         mozilla-jemalloc.patch
 Patch2:         thunderbird-shared-error.patch
-Patch3:         xulrunner-elif.patch
-Patch4:         thunderbird-pango.patch
-Patch5:         thunderbird-imap-startup-crash.patch
+Patch3:         thunderbird-3.0-ppc64.patch
 
 
 %if %{official_branding}
@@ -76,10 +81,12 @@ BuildRequires:  gnome-vfs2-devel
 BuildRequires:  libgnomeui-devel
 
 
-%define mozappdir %{_libdir}/thunderbird-%{thunver}b2
+%define mozappdir %{_libdir}/thunderbird-%{thunver}%{?thunbeta}
 
 ## For fixing lang
+%if 0%{?CVS}
 BuildRequires:  dos2unix, php-cli
+%endif
 
 # Without this enigmmail will require libxpcom.so and other .so  
 # which are not provided by thunderbird (to avoid mistake, 
@@ -114,9 +121,7 @@ features provided by GnuPG
 
 %patch1 -p0 -b .jemalloc
 %patch2 -p1 -b .shared-error
-%patch3 -p0 -b .xulrunner-elif
-%patch4 -p1 -b .pango-fix
-%patch5 -p1 -b .imap-startup-crash
+%patch3 -p0 -b .ppc64
 
 %if %{official_branding}
 # Required by Mozilla Corporation
@@ -136,10 +141,11 @@ features provided by GnuPG
 %endif
 
 # ===== Enigmail work =====
+# ===== Fixing langpack
+%if 0%{?CVS}
 mkdir mailnews/extensions/enigmail
 tar xzf %{SOURCE100} -C mailnews/extensions/enigmail
 
-# ===== Fixing langpack
 pushd mailnews/extensions/enigmail
 for rep in $(cat lang/current-languages.txt)
 do
@@ -148,6 +154,9 @@ do
    php %{SOURCE101} ui/locale/en-US lang/$rep
 done
 popd
+%else
+tar xzf %{SOURCE100} -C mailnews/extensions
+%endif
 
 #===============================================================================
 
@@ -250,6 +259,9 @@ fi
 #===============================================================================
 
 %changelog
+* Tue Jul 21 2009 Remi Collet <rpms@famillecollet.com> 0.97a-0.1.cvs20090721
+- new CVS snapshot (against thunderbird 3.0b3)
+
 * Thu May 21 2009 Remi Collet <rpms@famillecollet.com> 0.96a-0.3.cvs20090521
 - new CVS snapshot
 - fix License and Sumnary
