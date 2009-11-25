@@ -1,18 +1,29 @@
-%global nspr_version 4.6
-%global nss_version 3.10
-%global cairo_version 1.0
-%global dbus_glib_version 0.6
+%define nspr_version 4.8
+%define nss_version 3.12.3.99
+%define cairo_version 1.6.0
+%define freetype_version 2.1.9
+%define sqlite_version 3.6.14
+%define version_internal 3.0rc1
+%define build_langpacks 1
+%define moz_objdir objdir-tb
 
-%global official_branding 1
+%global thunver 3.0
+%global CVS     20091121
 
-%global thunver    3.0
-%global thunbeta   b3
+# The tarball is pretty inconsistent with directory structure.
+# Sometimes there is a top level directory.  That goes here.
+#
+# IMPORTANT: If there is no top level directory, this should be 
+# set to the cwd, ie: '.'
+#%define tarballdir .
+%define tarballdir comm-1.9.1
 
-%global CVS 20090721
+%define mozappdir %{_libdir}/thunderbird-%{thunver}
+%define official_branding 1
 
 Summary:        Authentication and encryption extension for Mozilla Thunderbird
 Name:           thunderbird-enigmail
-Version:        0.97a
+Version:        1.0
 %if 0%{?CVS}
 Release:        0.1.cvs%{CVS}%{?dist}
 %else
@@ -21,7 +32,7 @@ Release:        1%{?dist}
 URL:            http://enigmail.mozdev.org/
 License:        MPLv1.1 or GPLv2+
 Group:          Applications/Internet
-Source0:        http://releases.mozilla.org/pub/mozilla.org/thunderbird/releases/%{thunver}/source/thunderbird-%{thunver}%{?thunbeta}-source.tar.bz2
+Source0:        http://releases.mozilla.org/pub/mozilla.org/thunderbird/releases/%{version_internal}/source/thunderbird-%{version_internal}.source.tar.bz2
 
 Source10:       thunderbird-mozconfig
 Source11:       thunderbird-mozconfig-branded
@@ -31,7 +42,7 @@ Source11:       thunderbird-mozconfig-branded
 # cvs -d :pserver:guest@mozdev.org:/cvs login
 # => password is guest 
 # cvs -d :pserver:guest@mozdev.org:/cvs co enigmail/src
-# tar czf /home/rpmbuild/SOURCES/enigmail-20090721.tgz --exclude CVS -C enigmail/src .
+# tar czf /home/rpmbuild/SOURCES/enigmail-20091121.tgz --exclude CVS -C enigmail/src .
 Source100:      enigmail-%{CVS}.tgz
 %else
 Source100:      http://www.mozilla-enigmail.org/downloads/src/enigmail-%{version}.tar.gz
@@ -60,28 +71,32 @@ Patch3:         thunderbird-3.0-ppc64.patch
 %endif
 
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
-
-BuildRequires:  libcurl-devel
-BuildRequires:  cairo-devel >= %{cairo_version}
-BuildRequires:  dbus-glib-devel >= %{dbus_glib_version}
-BuildRequires:  libpng-devel, libjpeg-devel, gtk2-devel
-BuildRequires:  zlib-devel, gzip, zip, unzip
 BuildRequires:  nspr-devel >= %{nspr_version}
 BuildRequires:  nss-devel >= %{nss_version}
+BuildRequires:  cairo-devel >= %{cairo_version}
+BuildRequires:  libpng-devel
+BuildRequires:  libjpeg-devel
+BuildRequires:  zip
+BuildRequires:  bzip2-devel
+BuildRequires:  zlib-devel, gzip, zip, unzip
 BuildRequires:  libIDL-devel
-BuildRequires:  desktop-file-utils
-BuildRequires:  pango-devel >= 1.22
-BuildRequires:  freetype-devel >= 2.1.9
+BuildRequires:  gtk2-devel
+BuildRequires:  gnome-vfs2-devel
+BuildRequires:  libgnome-devel
+BuildRequires:  libgnomeui-devel
+BuildRequires:  krb5-devel
+BuildRequires:  pango-devel
+BuildRequires:  freetype-devel >= %{freetype_version}
 BuildRequires:  libXt-devel
 BuildRequires:  libXrender-devel
+BuildRequires:  hunspell-devel
+BuildRequires:  sqlite-devel >= %{sqlite_version}
+BuildRequires:  startup-notification-devel
 BuildRequires:  alsa-lib-devel
 BuildRequires:  autoconf213
+BuildRequires:  desktop-file-utils
 BuildRequires:  GConf2-devel
-BuildRequires:  gnome-vfs2-devel
-BuildRequires:  libgnomeui-devel
 
-
-%define mozappdir %{_libdir}/thunderbird-%{thunver}%{?thunbeta}
 
 ## For fixing lang
 %if 0%{?CVS}
@@ -117,7 +132,7 @@ features provided by GnuPG
 
 %prep
 %setup -q -c
-#cd mozilla
+cd %{tarballdir}
 
 %patch1 -p0 -b .jemalloc
 %patch2 -p1 -b .shared-error
@@ -161,7 +176,7 @@ tar xzf %{SOURCE100} -C mailnews/extensions
 #===============================================================================
 
 %build
-#cd mozilla
+cd %{tarballdir}
 
 # Build with -Os as it helps the browser; also, don't override mozilla's warning
 # level; they use -Wall but disable a few warnings that show up _everywhere_
@@ -172,18 +187,18 @@ export PREFIX='%{_prefix}'
 export LIBDIR='%{_libdir}'
 
 %define moz_make_flags -j1
-#%ifarch ppc ppc64 s390 s390x
-#%define moz_make_flags -j1
-#%else
-#%define moz_make_flags %{?_smp_mflags}
-#%endif
+%ifarch ppc ppc64 s390 s390x
+%define moz_make_flags -j1
+%else
+%define moz_make_flags %{?_smp_mflags}
+%endif
 
 export LDFLAGS="-Wl,-rpath,%{mozappdir}"
 export MAKE="gmake %{moz_make_flags}"
 
 # ===== Minimal build =====
 make -f client.mk export
-pushd objdir-tb/mozilla/modules/libreg
+pushd %{moz_objdir}/mozilla/modules/libreg
 make
 cd ../../xpcom/string
 make
@@ -198,7 +213,7 @@ pushd mailnews/extensions/enigmail
 ./makemake -r
 popd
 
-pushd objdir-tb/mailnews/extensions/enigmail
+pushd %{moz_objdir}/mailnews/extensions/enigmail
 make
 make xpi
 popd
@@ -207,11 +222,12 @@ popd
 #===============================================================================
 
 %install
+cd %{tarballdir}
 %{__rm} -rf $RPM_BUILD_ROOT
 
 %{__mkdir_p} $RPM_BUILD_ROOT%{_libdir}
 
-%{__unzip} -q objdir-tb/mozilla/dist/bin/enigmail-%{version}-linux-*.xpi -d $RPM_BUILD_ROOT%{_libdir}/%{name}
+%{__unzip} -q %{moz_objdir}/mozilla/dist/bin/enigmail-%{version}-linux-*.xpi -d $RPM_BUILD_ROOT%{_libdir}/%{name}
 %{__install} -p -m 755 %{SOURCE102} $RPM_BUILD_ROOT%{_libdir}/%{name}/mozilla-extension-update.sh
 
 
@@ -259,6 +275,9 @@ fi
 #===============================================================================
 
 %changelog
+* Sat Nov 21 2009 Remi Collet <rpms@famillecollet.com> 1.0-0.1.cvs20091121
+- new CVS snapshot (against thunderbird 3.0rc1)
+
 * Tue Jul 21 2009 Remi Collet <rpms@famillecollet.com> 0.97a-0.1.cvs20090721
 - new CVS snapshot (against thunderbird 3.0b3)
 
