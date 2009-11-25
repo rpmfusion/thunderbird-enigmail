@@ -1,8 +1,7 @@
-%define nspr_version 4.8
-%define nss_version 3.12.3.99
-%define cairo_version 1.6.0
+%define nspr_version 4.6
+%define nss_version 3.12.3
+%define cairo_version 1.0
 %define freetype_version 2.1.9
-%define sqlite_version 3.6.14
 %define version_internal 3.0rc1
 %define build_langpacks 1
 %define moz_objdir objdir-tb
@@ -25,7 +24,7 @@ Summary:        Authentication and encryption extension for Mozilla Thunderbird
 Name:           thunderbird-enigmail
 Version:        1.0
 %if 0%{?CVS}
-Release:        0.1.cvs%{CVS}%{?dist}
+Release:        0.1.cvs%{CVS}%{?dist}.1
 %else
 Release:        1%{?dist}
 %endif
@@ -90,7 +89,6 @@ BuildRequires:  freetype-devel >= %{freetype_version}
 BuildRequires:  libXt-devel
 BuildRequires:  libXrender-devel
 BuildRequires:  hunspell-devel
-BuildRequires:  sqlite-devel >= %{sqlite_version}
 BuildRequires:  startup-notification-devel
 BuildRequires:  alsa-lib-devel
 BuildRequires:  autoconf213
@@ -275,6 +273,9 @@ fi
 #===============================================================================
 
 %changelog
+* Sat Nov 21 2009 Remi Collet <rpms@famillecollet.com> 1.0-0.1.cvs20091121.1
+- fix F11 dependencies (no need of sqlite)
+
 * Sat Nov 21 2009 Remi Collet <rpms@famillecollet.com> 1.0-0.1.cvs20091121
 - new CVS snapshot (against thunderbird 3.0rc1)
 
