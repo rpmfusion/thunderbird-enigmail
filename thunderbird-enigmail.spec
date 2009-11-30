@@ -7,7 +7,7 @@
 %define moz_objdir objdir-tb
 
 %global thunver 3.0
-%global CVS     20091121
+#global CVS     20091121
 
 # The tarball is pretty inconsistent with directory structure.
 # Sometimes there is a top level directory.  That goes here.
@@ -22,7 +22,7 @@
 
 Summary:        Authentication and encryption extension for Mozilla Thunderbird
 Name:           thunderbird-enigmail
-Version:        1.0
+Version:        1.0.0
 %if 0%{?CVS}
 Release:        0.1.cvs%{CVS}%{?dist}.1
 %else
@@ -44,7 +44,7 @@ Source11:       thunderbird-mozconfig-branded
 # tar czf /home/rpmbuild/SOURCES/enigmail-20091121.tgz --exclude CVS -C enigmail/src .
 Source100:      enigmail-%{CVS}.tgz
 %else
-Source100:      http://www.mozilla-enigmail.org/downloads/src/enigmail-%{version}.tar.gz
+Source100:      http://www.mozilla-enigmail.org/download/source/enigmail-%{version}.tar.gz
 %endif
 
 # http://www.mozdev.org/pipermail/enigmail/2009-April/011018.html
@@ -225,7 +225,7 @@ cd %{tarballdir}
 
 %{__mkdir_p} $RPM_BUILD_ROOT%{_libdir}
 
-%{__unzip} -q %{moz_objdir}/mozilla/dist/bin/enigmail-%{version}-linux-*.xpi -d $RPM_BUILD_ROOT%{_libdir}/%{name}
+%{__unzip} -q %{moz_objdir}/mozilla/dist/bin/enigmail-*-linux-*.xpi -d $RPM_BUILD_ROOT%{_libdir}/%{name}
 %{__install} -p -m 755 %{SOURCE102} $RPM_BUILD_ROOT%{_libdir}/%{name}/mozilla-extension-update.sh
 
 
@@ -273,6 +273,9 @@ fi
 #===============================================================================
 
 %changelog
+* Mon Nov 30 2009 Remi Collet <rpms@famillecollet.com> 1.0.0-1
+- Enigmail 1.0 (against thunderbird 3.0rc1)
+
 * Sat Nov 21 2009 Remi Collet <rpms@famillecollet.com> 1.0-0.1.cvs20091121.1
 - fix F11 dependencies (no need of sqlite)
 
