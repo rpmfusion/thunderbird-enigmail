@@ -1,12 +1,12 @@
-%define nspr_version 4.6
-%define nss_version 3.12.3
-%define cairo_version 1.0
-%define freetype_version 2.1.9
-%define version_internal 3.0rc1
-%define build_langpacks 1
-%define moz_objdir objdir-tb
+%global nspr_version 4.8
+%global nss_version 3.12.3.99
+%global cairo_version 1.8.8
+%global freetype_version 2.1.9
+%global sqlite_version 3.6.14
+%global build_langpacks 1
+%global moz_objdir objdir-tb
 
-%global thunver 3.0
+%global thunver 3.0.1
 #global CVS     20091121
 
 # The tarball is pretty inconsistent with directory structure.
@@ -15,23 +15,25 @@
 # IMPORTANT: If there is no top level directory, this should be 
 # set to the cwd, ie: '.'
 #%define tarballdir .
-%define tarballdir comm-1.9.1
+%global tarballdir comm-1.9.1
 
-%define mozappdir %{_libdir}/thunderbird-%{thunver}
-%define official_branding 1
+%global official_branding 1
+
+%global version_internal  3.0
+%global mozappdir         %{_libdir}/%{name}-%{version_internal}
 
 Summary:        Authentication and encryption extension for Mozilla Thunderbird
 Name:           thunderbird-enigmail
-Version:        1.0.0
+Version:        1.0.1
 %if 0%{?CVS}
-Release:        0.1.cvs%{CVS}%{?dist}.1
+Release:        0.1.cvs%{CVS}%{?dist}
 %else
 Release:        1%{?dist}
 %endif
 URL:            http://enigmail.mozdev.org/
 License:        MPLv1.1 or GPLv2+
 Group:          Applications/Internet
-Source0:        http://releases.mozilla.org/pub/mozilla.org/thunderbird/releases/%{version_internal}/source/thunderbird-%{version_internal}.source.tar.bz2
+Source0:        http://releases.mozilla.org/pub/mozilla.org/thunderbird/releases/%{thunver}/source/thunderbird-%{thunver}.source.tar.bz2
 
 Source10:       thunderbird-mozconfig
 Source11:       thunderbird-mozconfig-branded
@@ -56,7 +58,9 @@ Source102: mozilla-extension-update.sh
 # Build patches
 Patch1:         mozilla-jemalloc.patch
 Patch2:         thunderbird-shared-error.patch
-Patch3:         thunderbird-3.0-ppc64.patch
+Patch4:         thunderbird-clipboard-crash.patch
+
+Patch9:         thunderbird-3.0-ppc64.patch
 
 
 %if %{official_branding}
@@ -89,6 +93,7 @@ BuildRequires:  freetype-devel >= %{freetype_version}
 BuildRequires:  libXt-devel
 BuildRequires:  libXrender-devel
 BuildRequires:  hunspell-devel
+BuildRequires:  sqlite-devel >= %{sqlite_version}
 BuildRequires:  startup-notification-devel
 BuildRequires:  alsa-lib-devel
 BuildRequires:  autoconf213
@@ -134,7 +139,9 @@ cd %{tarballdir}
 
 %patch1 -p0 -b .jemalloc
 %patch2 -p1 -b .shared-error
-%patch3 -p0 -b .ppc64
+%patch4 -p1 -b .clipboard-crash
+
+%patch9 -p0 -b .ppc64
 
 %if %{official_branding}
 # Required by Mozilla Corporation
@@ -273,11 +280,11 @@ fi
 #===============================================================================
 
 %changelog
+* Mon Feb 01 2010 Remi Collet <rpms@famillecollet.com> 1.0.1-1
+- Enigmail 1.0.1 (against thunderbird 3.0.1)
+
 * Mon Nov 30 2009 Remi Collet <rpms@famillecollet.com> 1.0.0-1
 - Enigmail 1.0 (against thunderbird 3.0rc1)
-
-* Sat Nov 21 2009 Remi Collet <rpms@famillecollet.com> 1.0-0.1.cvs20091121.1
-- fix F11 dependencies (no need of sqlite)
 
 * Sat Nov 21 2009 Remi Collet <rpms@famillecollet.com> 1.0-0.1.cvs20091121
 - new CVS snapshot (against thunderbird 3.0rc1)
