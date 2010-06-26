@@ -3,6 +3,7 @@
 %global cairo_version 1.8.8
 %global freetype_version 2.1.9
 %global sqlite_version 3.6.22
+%global libnotify_version 0.4
 %global moz_objdir objdir-tb
 
 %global thunver  3.1
@@ -27,7 +28,7 @@ Version:        1.1.1
 %if 0%{?prever:1}
 Release:        0.1.%{prever}%{?dist}
 %else
-Release:        1%{?dist}
+Release:        1%{?dist}.1
 %endif
 URL:            http://enigmail.mozdev.org/
 License:        MPLv1.1 or GPLv2+
@@ -75,6 +76,7 @@ BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildRequires:  nspr-devel >= %{nspr_version}
 BuildRequires:  nss-devel >= %{nss_version}
 BuildRequires:  cairo-devel >= %{cairo_version}
+BuildRequires:  libnotify-devel >= %{libnotify_version}
 BuildRequires:  libpng-devel
 BuildRequires:  libjpeg-devel
 BuildRequires:  zip
@@ -281,6 +283,9 @@ fi
 #===============================================================================
 
 %changelog
+* Sat Jun 26 2010 Remi Collet <rpms@famillecollet.com> 1.1.1-1.1
+- missing BR libnotify-devel
+
 * Sat Jun 26 2010 Remi Collet <rpms@famillecollet.com> 1.1.1-1
 - Enigmail 1.1.1 (against thunderbird 3.1)
 
