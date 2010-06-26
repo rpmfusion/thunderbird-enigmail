@@ -2,12 +2,10 @@
 %global nss_version 3.12.3.99
 %global cairo_version 1.8.8
 %global freetype_version 2.1.9
-%global sqlite_version 3.6.14
-%global build_langpacks 1
+%global sqlite_version 3.6.22
 %global moz_objdir objdir-tb
 
-%global thunver 3.0.1
-#global CVS     20091121
+%global thunver  3.1
 
 # The tarball is pretty inconsistent with directory structure.
 # Sometimes there is a top level directory.  That goes here.
@@ -15,25 +13,26 @@
 # IMPORTANT: If there is no top level directory, this should be 
 # set to the cwd, ie: '.'
 #%define tarballdir .
-%global tarballdir comm-1.9.1
+%global tarballdir comm-1.9.2
 
 %global official_branding 1
 
-%global version_internal  3.0
+%global version_internal  3.1
 %global mozappdir         %{_libdir}/%{name}-%{version_internal}
+
 
 Summary:        Authentication and encryption extension for Mozilla Thunderbird
 Name:           thunderbird-enigmail
-Version:        1.0.1
-%if 0%{?CVS}
-Release:        0.1.cvs%{CVS}%{?dist}
+Version:        1.1.1
+%if 0%{?prever:1}
+Release:        0.1.%{prever}%{?dist}
 %else
 Release:        1%{?dist}
 %endif
 URL:            http://enigmail.mozdev.org/
 License:        MPLv1.1 or GPLv2+
 Group:          Applications/Internet
-Source0:        http://releases.mozilla.org/pub/mozilla.org/thunderbird/releases/%{thunver}/source/thunderbird-%{thunver}.source.tar.bz2
+Source0:        thunderbird-%{thunver}%{?thunbeta}.source.tar.bz2
 
 Source10:       thunderbird-mozconfig
 Source11:       thunderbird-mozconfig-branded
@@ -46,7 +45,7 @@ Source11:       thunderbird-mozconfig-branded
 # tar czf /home/rpmbuild/SOURCES/enigmail-20091121.tgz --exclude CVS -C enigmail/src .
 Source100:      enigmail-%{CVS}.tgz
 %else
-Source100:      http://www.mozilla-enigmail.org/download/source/enigmail-%{version}.tar.gz
+Source100:      http://www.mozilla-enigmail.org/download/source/enigmail-%{version}%{?prever}.tar.gz
 %endif
 
 # http://www.mozdev.org/pipermail/enigmail/2009-April/011018.html
@@ -55,21 +54,20 @@ Source101: enigmail-fixlang.php
 # From sunbird.src.rpm
 Source102: mozilla-extension-update.sh
 
-# Build patches
+# Fix for version issues
+Patch0:         thunderbird-version.patch
+# Fix for jemalloc
 Patch1:         mozilla-jemalloc.patch
+# Fix for installation fail when building with dynamic linked libraries
 Patch2:         thunderbird-shared-error.patch
-Patch4:         thunderbird-clipboard-crash.patch
-
-Patch9:         thunderbird-3.0-ppc64.patch
-
+# Fixes gcc complain that nsFrame::delete is protected
+Patch4:         xulrunner-1.9.2.1-build.patch
 
 %if %{official_branding}
 # Required by Mozilla Corporation
 
-
 %else
 # Not yet approved by Mozillla Corporation
-
 
 %endif
 
@@ -137,19 +135,19 @@ features provided by GnuPG
 %setup -q -c
 cd %{tarballdir}
 
+sed -e 's/__RPM_VERSION_INTERNAL__/%{version_internal}/' %{P:%%PATCH0} \
+    > version.patch
+%{__patch} -p1 -b --suffix .version --fuzz=0 < version.patch
+
 %patch1 -p0 -b .jemalloc
 %patch2 -p1 -b .shared-error
-%patch4 -p1 -b .clipboard-crash
-
-%patch9 -p0 -b .ppc64
+%patch4 -p1 -b .protected
 
 %if %{official_branding}
 # Required by Mozilla Corporation
 
-
 %else
 # Not yet approved by Mozillla Corporation
-
 
 %endif
 
@@ -182,6 +180,9 @@ tar xzf %{SOURCE100} -C mailnews/extensions
 
 %build
 cd %{tarballdir}
+
+INTERNAL_GECKO=%{version_internal}
+MOZ_APP_DIR=%{mozappdir}
 
 # Build with -Os as it helps the browser; also, don't override mozilla's warning
 # level; they use -Wall but disable a few warnings that show up _everywhere_
@@ -280,6 +281,9 @@ fi
 #===============================================================================
 
 %changelog
+* Sat Jun 26 2010 Remi Collet <rpms@famillecollet.com> 1.1.1-1
+- Enigmail 1.1.1 (against thunderbird 3.1)
+
 * Mon Feb 01 2010 Remi Collet <rpms@famillecollet.com> 1.0.1-1
 - Enigmail 1.0.1 (against thunderbird 3.0.1)
 
