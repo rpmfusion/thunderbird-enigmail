@@ -28,7 +28,7 @@ Version:        1.1.1
 %if 0%{?prever:1}
 Release:        0.1.%{prever}%{?dist}
 %else
-Release:        1%{?dist}.1
+Release:        2%{?dist}
 %endif
 URL:            http://enigmail.mozdev.org/
 License:        MPLv1.1 or GPLv2+
@@ -237,7 +237,7 @@ cd %{tarballdir}
 
 %{__unzip} -q %{moz_objdir}/mozilla/dist/bin/enigmail-*-linux-*.xpi -d $RPM_BUILD_ROOT%{_libdir}/%{name}
 %{__install} -p -m 755 %{SOURCE102} $RPM_BUILD_ROOT%{_libdir}/%{name}/mozilla-extension-update.sh
-
+%{__chmod} +x $RPM_BUILD_ROOT%{_libdir}/%{name}/wrappers/*.sh
 
 
 %clean
@@ -283,6 +283,9 @@ fi
 #===============================================================================
 
 %changelog
+* Sat Jun 26 2010 Remi Collet <rpms@famillecollet.com> 1.1.1-2
+- new sources (only fix displayed version)
+
 * Sat Jun 26 2010 Remi Collet <rpms@famillecollet.com> 1.1.1-1.1
 - missing BR libnotify-devel
 
