@@ -1,12 +1,13 @@
-%global nspr_version 4.8
-%global nss_version 3.12.3.99
-%global cairo_version 1.8.8
-%global freetype_version 2.1.9
-%global sqlite_version 3.6.22
-%global libnotify_version 0.4
-%global moz_objdir objdir-tb
+%define nspr_version 4.8
+%define nss_version 3.12.8
+%define cairo_version 1.8.8
+%define freetype_version 2.1.9
+%define sqlite_version 3.6.14
+%define libnotify_version 0.4
+%define build_langpacks 1
+%define thunderbird_app_id \{3550f703-e582-4d05-9a08-453d09bdfdc6\}
 
-%global thunver  3.1.1
+%global thunver  5.0
 
 # The tarball is pretty inconsistent with directory structure.
 # Sometimes there is a top level directory.  That goes here.
@@ -14,22 +15,22 @@
 # IMPORTANT: If there is no top level directory, this should be 
 # set to the cwd, ie: '.'
 #%define tarballdir .
-%global tarballdir comm-1.9.2
+%define tarballdir comm-miramar
 
-%global official_branding 1
+%define official_branding 1
 
-%global version_internal  3.1
-%global mozappdir         %{_libdir}/thunderbird-%{version_internal}
+%define version_internal  5.0
+%define mozappdir         %{_libdir}/thunderbird-%{version_internal}
 %global enigmail_extname  %{_libdir}/mozilla/extensions/{3550f703-e582-4d05-9a08-453d09bdfdc6}/{847b3a00-7ab1-11d4-8f02-006008948af5}
 
 
 Summary:        Authentication and encryption extension for Mozilla Thunderbird
 Name:           thunderbird-enigmail
-Version:        1.1.2
+Version:        1.2
 %if 0%{?prever:1}
 Release:        0.1.%{prever}%{?dist}
 %else
-Release:        1%{?dist}
+Release:        1%{?dist}.1
 %endif
 URL:            http://enigmail.mozdev.org/
 License:        MPLv1.1 or GPLv2+
@@ -51,22 +52,16 @@ Source100:      http://www.mozilla-enigmail.org/download/source/enigmail-%{versi
 %endif
 
 # http://www.mozdev.org/pipermail/enigmail/2009-April/011018.html
-Source101: enigmail-fixlang.php
+Source101:      enigmail-fixlang.php
 
-# Fix for version issues
+
 Patch0:         thunderbird-version.patch
-# Fix for jemalloc
-Patch1:         mozilla-jemalloc.patch
-# Fix for installation fail when building with dynamic linked libraries
-Patch2:         thunderbird-shared-error.patch
-# Fixes gcc complain that nsFrame::delete is protected
-Patch4:         xulrunner-1.9.2.1-build.patch
-# Fix missing includes for crash reporter, remove in 3.1 final
-Patch5:         xulrunner-missing-headers.patch
-Patch6:         remove-static.patch
+Patch6:         mozilla-build-s390.patch
+Patch7:         crashreporter-remove-static.patch
 
 # Enigmail patch
-Patch101:       enigmail-1.1.2-perm.patch
+Patch100:       enigmail-rdf.patch
+
 
 %if %{official_branding}
 # Required by Mozilla Corporation
@@ -102,20 +97,21 @@ BuildRequires:  startup-notification-devel
 BuildRequires:  alsa-lib-devel
 BuildRequires:  autoconf213
 BuildRequires:  desktop-file-utils
+BuildRequires:  libcurl-devel
+BuildRequires:  yasm
+BuildRequires:  mesa-libGL-devel
 BuildRequires:  GConf2-devel
 
-
 ## For fixing lang
-%if 0%{?CVS}
 BuildRequires:  dos2unix, php-cli
-%endif
+
 
 # Without this enigmmail will require libxpcom.so and other .so  
 # which are not provided by thunderbird (to avoid mistake, 
 # because provided by xulrunner). 
 AutoReq:  0
 # All others deps already required by thunderbird
-Requires: gnupg, thunderbird >= %{version_internal}
+Requires: gnupg, thunderbird >= %{thunver}
 
 # Nothing usefull provided
 AutoProv: 0
@@ -136,11 +132,13 @@ sed -e 's/__RPM_VERSION_INTERNAL__/%{version_internal}/' %{P:%%PATCH0} \
     > version.patch
 %{__patch} -p1 -b --suffix .version --fuzz=0 < version.patch
 
-%patch1 -p0 -b .jemalloc
-%patch2 -p1 -b .shared-error
-%patch4 -p1 -b .protected
-%patch5 -p0 -b .stat
-%patch6 -p1 -b .static
+# Mozilla (XULRunner) patches
+cd mozilla
+%ifarch s390
+%patch6 -p1 -b .s390
+%endif
+%patch7 -p2 -b .static
+cd ..
 
 %if %{official_branding}
 # Required by Mozilla Corporation
@@ -158,11 +156,19 @@ sed -e 's/__RPM_VERSION_INTERNAL__/%{version_internal}/' %{P:%%PATCH0} \
 %endif
 
 # ===== Enigmail work =====
-# ===== Fixing langpack
 %if 0%{?CVS}
 mkdir mailnews/extensions/enigmail
 tar xzf %{SOURCE100} -C mailnews/extensions/enigmail
 
+%else
+tar xzf %{SOURCE100} -C mailnews/extensions
+pushd mailnews/extensions/enigmail
+# Apply Enigmail patch here
+%patch100 -p1 -b .orig
+popd
+%endif
+
+# ===== Fixing langpack
 pushd mailnews/extensions/enigmail
 for rep in $(cat lang/current-languages.txt)
 do
@@ -171,12 +177,6 @@ do
    php %{SOURCE101} ui/locale/en-US lang/$rep
 done
 popd
-%else
-tar xzf %{SOURCE100} -C mailnews/extensions
-pushd mailnews/extensions/enigmail
-%patch101 -p1
-popd
-%endif
 
 #===============================================================================
 
@@ -186,11 +186,18 @@ cd %{tarballdir}
 INTERNAL_GECKO=%{version_internal}
 MOZ_APP_DIR=%{mozappdir}
 
-# Build with -Os as it helps the browser; also, don't override mozilla's warning
-# level; they use -Wall but disable a few warnings that show up _everywhere_
-MOZ_OPT_FLAGS=$(echo $RPM_OPT_FLAGS | %{__sed} -e 's/-O2/-Os/' -e 's/-Wall//')
+# -fpermissive is needed to build with gcc 4.6+ which has become stricter
+#
+# Mozilla builds with -Wall with exception of a few warnings which show up
+# everywhere in the code; so, don't override that.
+#
+# Disable C++ exceptions since Mozilla code is not exception-safe
+#
+MOZ_OPT_FLAGS=$(echo "$RPM_OPT_FLAGS -fpermissive" | \
+                      %{__sed} -e 's/-Wall//' -e 's/-fexceptions/-fno-exceptions/g')
+export CFLAGS=$MOZ_OPT_FLAGS
+export CXXFLAGS=$MOZ_OPT_FLAGS
 
-export RPM_OPT_FLAGS=$MOZ_OPT_FLAGS
 export PREFIX='%{_prefix}'
 export LIBDIR='%{_libdir}'
 
@@ -204,25 +211,21 @@ export LIBDIR='%{_libdir}'
 export LDFLAGS="-Wl,-rpath,%{mozappdir}"
 export MAKE="gmake %{moz_make_flags}"
 
-# ===== Minimal build =====
-make -f client.mk export
-pushd %{moz_objdir}/mozilla/modules/libreg
-make
-cd ../../xpcom/string
-make
-cd ..
-make
-cd obsolete
-make
-popd
+# ===== Thunderbird build =====
+# http://enigmail.mozdev.org/download/source.php.html
+make -f client.mk build
 
 # ===== Enigmail work =====
 pushd mailnews/extensions/enigmail
 ./makemake -r
+make
 popd
 
-pushd %{moz_objdir}/mailnews/extensions/enigmail
-make
+pushd mozilla/dist/bin/chrome/enigmail
+zip ../enigmail.jar  -r content locale skin
+popd
+
+pushd mailnews/extensions/enigmail
 make xpi
 popd
 
@@ -235,7 +238,7 @@ cd %{tarballdir}
 
 %{__mkdir_p} $RPM_BUILD_ROOT%{enigmail_extname}
 
-%{__unzip} -q %{moz_objdir}/mozilla/dist/bin/enigmail-*-linux-*.xpi -d $RPM_BUILD_ROOT%{enigmail_extname}
+%{__unzip} -q mozilla/dist/bin/enigmail-*-linux-*.xpi -d $RPM_BUILD_ROOT%{enigmail_extname}
 %{__chmod} +x $RPM_BUILD_ROOT%{enigmail_extname}/wrappers/*.sh
 
 
@@ -251,6 +254,12 @@ cd %{tarballdir}
 #===============================================================================
 
 %changelog
+* Sun Jul 17 2011 Remi Collet <remi@fedoraproject.org> 1.2-1.1
+- fix BR (dos2unix + php-cli)
+
+* Sun Jul 17 2011 Remi Collet <remi@fedoraproject.org> 1.2-1
+- Enigmail 1.2 for Thunderbird 5.0
+
 * Thu Jul 22 2010 Remi Collet <rpms@famillecollet.com> 1.1.2-1
 - Enigmail 1.1.2 (against thunderbird 3.1.1)
 - move to /usr/lib/mozilla/extensions (as lightning)
