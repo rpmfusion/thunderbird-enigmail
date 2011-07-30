@@ -1,8 +1,8 @@
-%define nspr_version 4.8
+%define nspr_version 4.8.7
 %define nss_version 3.12.8
-%define cairo_version 1.8.8
+%define cairo_version 1.10.0
 %define freetype_version 2.1.9
-%define sqlite_version 3.6.14
+%define sqlite_version 3.6.22
 %define libnotify_version 0.4
 %define build_langpacks 1
 %define thunderbird_app_id \{3550f703-e582-4d05-9a08-453d09bdfdc6\}
@@ -26,11 +26,11 @@
 
 Summary:        Authentication and encryption extension for Mozilla Thunderbird
 Name:           thunderbird-enigmail
-Version:        1.2
+Version:        1.2.1
 %if 0%{?prever:1}
 Release:        0.1.%{prever}%{?dist}
 %else
-Release:        1%{?dist}.1
+Release:        1%{?dist}
 %endif
 URL:            http://enigmail.mozdev.org/
 License:        MPLv1.1 or GPLv2+
@@ -150,12 +150,15 @@ cd ..
 
 
 %{__rm} -f .mozconfig
+# From Thunderbnird
 %{__cp} %{SOURCE10} .mozconfig
 %if %{official_branding}
 %{__cat} %{SOURCE11} >> .mozconfig
 %endif
 
 # ===== Enigmail work =====
+echo 'ac_add_options --enable-chrome-format=jar' >>.mozconfig
+
 %if 0%{?CVS}
 mkdir mailnews/extensions/enigmail
 tar xzf %{SOURCE100} -C mailnews/extensions/enigmail
@@ -219,13 +222,6 @@ make -f client.mk build
 pushd mailnews/extensions/enigmail
 ./makemake -r
 make
-popd
-
-pushd mozilla/dist/bin/chrome/enigmail
-zip ../enigmail.jar  -r content locale skin
-popd
-
-pushd mailnews/extensions/enigmail
 make xpi
 popd
 
@@ -254,6 +250,10 @@ cd %{tarballdir}
 #===============================================================================
 
 %changelog
+* Sat Jul 30 2011 Remi Collet <remi@fedoraproject.org> 1.2.1-1
+- Enigmail 1.2.1 for Thunderbird 5.0
+- add --enable-chrome-format=jar to generate enigmail.jar
+
 * Sun Jul 17 2011 Remi Collet <remi@fedoraproject.org> 1.2-1.1
 - fix BR (dos2unix + php-cli)
 
