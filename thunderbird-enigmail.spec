@@ -29,7 +29,7 @@ Version:        1.3.2
 %if 0%{?prever:1}
 Release:        0.1.%{prever}%{?dist}
 %else
-Release:        1%{?dist}
+Release:        1%{?dist}.1
 %endif
 URL:            http://enigmail.mozdev.org/
 License:        MPLv1.1 or GPLv2+
@@ -58,9 +58,6 @@ Source101:      enigmail-fixlang.php
 Patch0:         thunderbird-install-dir.patch
 Patch7:         crashreporter-remove-static.patch
 Patch8:         xulrunner-6.0-secondary-ipc.patch
-
-# Enigmail patch
-Patch100:       enigmail-rdf.patch
 
 
 %if %{official_branding}
@@ -247,6 +244,9 @@ cd %{tarballdir}
 #===============================================================================
 
 %changelog
+* Sat Oct 01 2011 Remi Collet <remi@fedoraproject.org> 1.3.2-1.1
+- remove unused patch 
+
 * Sat Oct 01 2011 Remi Collet <remi@fedoraproject.org> 1.3.2-1
 - Enigmail 1.3.2 for Thunderbird 7.0.x
 - fix extension version
