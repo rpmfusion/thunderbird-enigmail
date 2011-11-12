@@ -7,7 +7,7 @@
 %define build_langpacks 1
 %define thunderbird_app_id \{3550f703-e582-4d05-9a08-453d09bdfdc6\}
 
-%global thunver  7.0
+%global thunver  8.0
 
 # The tarball is pretty inconsistent with directory structure.
 # Sometimes there is a top level directory.  That goes here.
@@ -25,7 +25,7 @@
 
 Summary:        Authentication and encryption extension for Mozilla Thunderbird
 Name:           thunderbird-enigmail
-Version:        1.3.2
+Version:        1.3.3
 %if 0%{?prever:1}
 Release:        0.1.%{prever}%{?dist}
 %else
@@ -58,6 +58,12 @@ Source101:      enigmail-fixlang.php
 Patch0:         thunderbird-install-dir.patch
 Patch7:         crashreporter-remove-static.patch
 Patch8:         xulrunner-6.0-secondary-ipc.patch
+Patch9:         mozilla-670719.patch
+Patch10:        xulrunner-2.0-network-link-service.patch
+Patch11:        xulrunner-2.0-NetworkManager09.patch
+
+# Build patches
+Patch100:       xulrunner-install.patch
 
 
 %if %{official_branding}
@@ -130,6 +136,10 @@ cd %{tarballdir}
 cd mozilla
 %patch7 -p2 -b .static
 %patch8 -p2 -b .secondary-ipc
+%patch9 -p1 -b .moz670719
+%patch10 -p1 -b .link-service
+%patch11 -p1 -b .NetworkManager09
+%patch100 -p2 -b .install
 cd ..
 
 %if %{official_branding}
@@ -198,19 +208,20 @@ export CXXFLAGS=$MOZ_OPT_FLAGS
 export PREFIX='%{_prefix}'
 export LIBDIR='%{_libdir}'
 
-%define moz_make_flags -j1
-%ifarch ppc ppc64 s390 s390x
-%define moz_make_flags -j1
-%else
-%define moz_make_flags %{?_smp_mflags}
+MOZ_SMP_FLAGS=-j1
+# On x86 architectures, Mozilla can build up to 4 jobs at once in parallel,
+# however builds tend to fail on other arches when building in parallel.
+%ifarch %{ix86} x86_64
+[ -z "$RPM_BUILD_NCPUS" ] && \
+     RPM_BUILD_NCPUS="`/usr/bin/getconf _NPROCESSORS_ONLN`"
+[ "$RPM_BUILD_NCPUS" -ge 2 ] && MOZ_SMP_FLAGS=-j2
+[ "$RPM_BUILD_NCPUS" -ge 4 ] && MOZ_SMP_FLAGS=-j4
 %endif
 
-export LDFLAGS="-Wl,-rpath,%{mozappdir}"
-export MAKE="gmake %{moz_make_flags}"
 
 # ===== Thunderbird build =====
 # http://enigmail.mozdev.org/download/source.php.html
-make -f client.mk build
+make -f client.mk build STRIP="/bin/true" MOZ_MAKE_FLAGS="$MOZ_SMP_FLAGS"
 
 # ===== Enigmail work =====
 pushd mailnews/extensions/enigmail
@@ -244,6 +255,12 @@ cd %{tarballdir}
 #===============================================================================
 
 %changelog
+* Sat Nov 12 2011 Remi Collet <remi@fedoraproject.org> 1.3.3-1
+- Enigmail 1.3.3 for Thunderbird 8.0
+
+* Sat Oct 01 2011 Remi Collet <remi@fedoraproject.org> 1.3.2-1.1
+- remove unused patch 
+
 * Sat Oct 01 2011 Remi Collet <remi@fedoraproject.org> 1.3.2-1
 - Enigmail 1.3.2 for Thunderbird 7.0.x
 - fix extension version
