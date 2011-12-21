@@ -35,7 +35,7 @@ Version:        1.3.4
 %if 0%{?prever:1}
 Release:        0.1.%{prever}%{?dist}
 %else
-Release:        1%{?dist}
+Release:        1%{?dist}.1
 %endif
 URL:            http://enigmail.mozdev.org/
 License:        MPLv1.1 or GPLv2+
@@ -270,7 +270,7 @@ cd %{tarballdir}
 #===============================================================================
 
 %changelog
-* Wed Dec 21 2011 Remi Collet <remi@fedoraproject.org> 1.3.4-1
+* Wed Dec 21 2011 Remi Collet <remi@fedoraproject.org> 1.3.4-1.1
 - Enigmail 1.3.4 for Thunderbird 9.0
 
 * Sat Nov 12 2011 Remi Collet <remi@fedoraproject.org> 1.3.3-1
