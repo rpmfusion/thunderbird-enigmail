@@ -1,13 +1,19 @@
 %define nspr_version 4.8.8
-%define nss_version 3.12.10
+%define nss_version 3.13.1
 %define cairo_version 1.10.0
 %define freetype_version 2.1.9
-%define sqlite_version 3.6.22
+%define sqlite_version 3.7.7.1
 %define libnotify_version 0.4
 %define build_langpacks 1
 %define thunderbird_app_id \{3550f703-e582-4d05-9a08-453d09bdfdc6\}
 
-%global thunver  8.0
+%if 0%{?fedora} <= 15
+%define system_sqlite 0
+%else
+%define system_sqlite 1
+%endif
+
+%global thunver  9.0
 
 # The tarball is pretty inconsistent with directory structure.
 # Sometimes there is a top level directory.  That goes here.
@@ -25,11 +31,11 @@
 
 Summary:        Authentication and encryption extension for Mozilla Thunderbird
 Name:           thunderbird-enigmail
-Version:        1.3.3
+Version:        1.3.4
 %if 0%{?prever:1}
 Release:        0.1.%{prever}%{?dist}
 %else
-Release:        1%{?dist}.1
+Release:        1%{?dist}
 %endif
 URL:            http://enigmail.mozdev.org/
 License:        MPLv1.1 or GPLv2+
@@ -57,13 +63,15 @@ Source101:      enigmail-fixlang.php
 # Mozilla (XULRunner) patches
 Patch0:         thunderbird-install-dir.patch
 Patch7:         crashreporter-remove-static.patch
-Patch8:         xulrunner-6.0-secondary-ipc.patch
-Patch9:         mozilla-670719.patch
+Patch8:         xulrunner-9.0-secondary-ipc.patch
 Patch10:        xulrunner-2.0-network-link-service.patch
 Patch11:        xulrunner-2.0-NetworkManager09.patch
+Patch12:        mozilla-696393.patch
 
 # Build patches
-Patch100:       xulrunner-install.patch
+
+# Linux specific
+Patch200:       thunderbird-8.0-enable-addons.patch
 
 
 %if %{official_branding}
@@ -95,7 +103,9 @@ BuildRequires:  freetype-devel >= %{freetype_version}
 BuildRequires:  libXt-devel
 BuildRequires:  libXrender-devel
 BuildRequires:  hunspell-devel
+%if %{?system_sqlite}
 BuildRequires:  sqlite-devel >= %{sqlite_version}
+%endif
 BuildRequires:  startup-notification-devel
 BuildRequires:  alsa-lib-devel
 BuildRequires:  autoconf213
@@ -136,31 +146,36 @@ cd %{tarballdir}
 cd mozilla
 %patch7 -p2 -b .static
 %patch8 -p2 -b .secondary-ipc
-%patch9 -p1 -b .moz670719
 %patch10 -p1 -b .link-service
 %patch11 -p1 -b .NetworkManager09
-%patch100 -p2 -b .install
+%patch12 -p2 -b .696393
 cd ..
+
+%patch200 -p1 -b .addons
 
 %if %{official_branding}
 # Required by Mozilla Corporation
 
 %else
-# Not yet approved by Mozillla Corporation
+# Not yet approved by Mozilla Corporation
 
 %endif
 
 
 %{__rm} -f .mozconfig
-# From Thunderbnird
+# From Thunderbird
 %{__cp} %{SOURCE10} .mozconfig
 %if %{official_branding}
 %{__cat} %{SOURCE11} >> .mozconfig
 %endif
 
-# ===== Enigmail work =====
-echo 'ac_add_options --enable-chrome-format=jar' >>.mozconfig
+%if %{?system_sqlite}
+echo "ac_add_options --enable-system-sqlite"  >> .mozconfig
+%else
+echo "ac_add_options --disable-system-sqlite" >> .mozconfig
+%endif
 
+# ===== Enigmail work =====
 %if 0%{?CVS}
 mkdir mailnews/extensions/enigmail
 tar xzf %{SOURCE100} -C mailnews/extensions/enigmail
@@ -255,6 +270,9 @@ cd %{tarballdir}
 #===============================================================================
 
 %changelog
+* Wed Dec 21 2011 Remi Collet <remi@fedoraproject.org> 1.3.4-1
+- Enigmail 1.3.4 for Thunderbird 9.0
+
 * Sat Nov 12 2011 Remi Collet <remi@fedoraproject.org> 1.3.3-1
 - Enigmail 1.3.3 for Thunderbird 8.0
 
