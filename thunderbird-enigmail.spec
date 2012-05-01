@@ -1,3 +1,5 @@
+%global debug_build 0
+
 # Use system Librairies ?
 %if 0%{?fedora} <= 17
 %global system_sqlite 0
@@ -21,7 +23,7 @@
 #
 # IMPORTANT: If there is no top level directory, this should be 
 # set to the cwd, ie: '.'
-#%define tarballdir .
+#define tarballdir .
 %global tarballdir comm-release
 
 %global official_branding 1
@@ -41,7 +43,7 @@ Release:        2%{?dist}
 URL:            http://enigmail.mozdev.org/
 License:        MPLv1.1 or GPLv2+
 Group:          Applications/Internet
-Source0:        thunderbird-%{thunver}%{?thunbeta}.source.tar.bz2
+Source0:        ftp://ftp.mozilla.org/pub/thunderbird/releases/%{thunver}%{?pre_version}/source/thunderbird-%{thunver}%{?pre_version}.source.tar.bz2
 
 Source10:       thunderbird-mozconfig
 Source11:       thunderbird-mozconfig-branded
@@ -71,7 +73,7 @@ Patch104:       xulrunner-10.0-gcc47.patch
 Patch200:       thunderbird-8.0-enable-addons.patch
 
 # ARM Specific 
-Patch210: 	mozilla-724615.patch
+Patch210:       mozilla-724615.patch
 
 
 %if %{official_branding}
