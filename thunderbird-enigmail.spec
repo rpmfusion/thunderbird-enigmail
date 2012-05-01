@@ -1,23 +1,17 @@
-%define debug_build       0
-
 # Use system Librairies ?
 %if 0%{?fedora} <= 17
-%define system_sqlite 0
+%global system_sqlite 0
 %else
-%define system_sqlite 1
+%global system_sqlite 1
 %endif
 
-%define build_langpacks 1
-
-%define nspr_version 4.9
-%define nss_version 3.13.3
-%define cairo_version 1.10.0
-%define freetype_version 2.1.9
-%define sqlite_version 3.7.10
-%define libnotify_version 0.4
+%global nspr_version 4.9
+%global nss_version 3.13.3
+%global cairo_version 1.10.0
+%global freetype_version 2.1.9
+%global sqlite_version 3.7.10
+%global libnotify_version 0.4
 %global libvpx_version 1.0.0
-
-%define thunderbird_app_id \{3550f703-e582-4d05-9a08-453d09bdfdc6\}
 
 %global thunver  12.0
 %global thunmax  13.0
@@ -28,11 +22,11 @@
 # IMPORTANT: If there is no top level directory, this should be 
 # set to the cwd, ie: '.'
 #%define tarballdir .
-%define tarballdir comm-release
+%global tarballdir comm-release
 
-%define official_branding 1
+%global official_branding 1
 
-%define mozappdir         %{_libdir}/thunderbird
+%global mozappdir         %{_libdir}/thunderbird
 %global enigmail_extname  %{_libdir}/mozilla/extensions/{3550f703-e582-4d05-9a08-453d09bdfdc6}/{847b3a00-7ab1-11d4-8f02-006008948af5}
 
 
@@ -42,7 +36,7 @@ Version:        1.4.1
 %if 0%{?prever:1}
 Release:        0.1.%{prever}%{?dist}
 %else
-Release:        1%{?dist}
+Release:        2%{?dist}
 %endif
 URL:            http://enigmail.mozdev.org/
 License:        MPLv1.1 or GPLv2+
@@ -88,7 +82,6 @@ Patch210: 	mozilla-724615.patch
 
 %endif
 
-BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildRequires:  nspr-devel >= %{nspr_version}
 BuildRequires:  nss-devel >= %{nss_version}
 BuildRequires:  cairo-devel >= %{cairo_version}
@@ -117,9 +110,7 @@ BuildRequires:  alsa-lib-devel
 BuildRequires:  autoconf213
 BuildRequires:  desktop-file-utils
 BuildRequires:  libcurl-devel
-BuildRequires:  yasm
 BuildRequires:  mesa-libGL-devel
-BuildRequires:  GConf2-devel
 BuildRequires:  libvpx-devel >= %{libvpx_version}
 
 ## For fixing lang
@@ -275,25 +266,22 @@ popd
 
 %install
 cd %{tarballdir}
-rm -rf $RPM_BUILD_ROOT
 
-mkdir -p $RPM_BUILD_ROOT%{enigmail_extname}
+mkdir -p %{buildroot}%{enigmail_extname}
 
-unzip -q mozilla/dist/bin/enigmail-*-linux-*.xpi -d $RPM_BUILD_ROOT%{enigmail_extname}
-
-
-%clean
-rm -rf $RPM_BUILD_ROOT
+unzip -q mozilla/dist/bin/enigmail-*-linux-*.xpi -d %{buildroot}%{enigmail_extname}
 
 
 %files
-%defattr(-,root,root,-)
 %{enigmail_extname}
 
 
 #===============================================================================
 
 %changelog
+* Tue May 01 2012 Remi Collet <remi@fedoraproject.org> 1.4.1-2
+- spec cleanups
+
 * Sat Apr 28 2012 Remi Collet <remi@fedoraproject.org> 1.4.1-1
 - Enigmail 1.4.1 for Thunderbird 12.0
 
