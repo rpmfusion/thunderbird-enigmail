@@ -14,9 +14,10 @@
 %global sqlite_version 3.7.10
 %global libnotify_version 0.4
 %global libvpx_version 1.0.0
+%global _default_patch_fuzz 2
 
-%global thunver  12.0
-%global thunmax  13.0
+%global thunver  13.0
+%global thunmax  14.0
 
 # The tarball is pretty inconsistent with directory structure.
 # Sometimes there is a top level directory.  That goes here.
@@ -34,11 +35,11 @@
 
 Summary:        Authentication and encryption extension for Mozilla Thunderbird
 Name:           thunderbird-enigmail
-Version:        1.4.1
+Version:        1.4.2
 %if 0%{?prever:1}
 Release:        0.1.%{prever}%{?dist}
 %else
-Release:        2%{?dist}
+Release:        1%{?dist}
 %endif
 URL:            http://enigmail.mozdev.org/
 License:        MPLv1.1 or GPLv2+
@@ -66,14 +67,11 @@ Patch7:         crashreporter-remove-static.patch
 Patch8:         xulrunner-10.0-secondary-ipc.patch
 
 # Build patches
-Patch102:       mozilla-733867-x.patch
-Patch103:       mozilla-file.patch
 Patch104:       xulrunner-10.0-gcc47.patch
+Patch105:       xulrunner-prtime.patch
+
 # Linux specific
 Patch200:       thunderbird-8.0-enable-addons.patch
-
-# ARM Specific 
-Patch210:       mozilla-724615.patch
 
 
 %if %{official_branding}
@@ -85,6 +83,7 @@ Patch210:       mozilla-724615.patch
 %endif
 
 BuildRequires:  nspr-devel >= %{nspr_version}
+BuildRequires:  nss-static
 BuildRequires:  nss-devel >= %{nss_version}
 BuildRequires:  cairo-devel >= %{cairo_version}
 BuildRequires:  libnotify-devel >= %{libnotify_version}
@@ -148,13 +147,11 @@ cd %{tarballdir}
 cd mozilla
 %patch7 -p2 -b .static
 %patch8 -p3 -b .secondary-ipc
-%patch103 -p1 -b .mozilla-file
 %patch104 -p1 -b .gcc47
+%patch105 -p1 -b .prtime
 cd ..
-%patch102 -p1 -b .733867
 
 %patch200 -p1 -b .addons
-%patch210 -p1 -b .724615
 
 %if %{official_branding}
 # Required by Mozilla Corporation
@@ -259,6 +256,9 @@ make -f client.mk build STRIP="/bin/true" MOZ_MAKE_FLAGS="$MOZ_SMP_FLAGS"
 # ===== Enigmail work =====
 pushd mailnews/extensions/enigmail
 ./makemake -r
+popd
+
+pushd objdir/mailnews/extensions/enigmail
 make
 make xpi
 popd
@@ -270,8 +270,7 @@ popd
 cd %{tarballdir}
 
 mkdir -p %{buildroot}%{enigmail_extname}
-
-unzip -q mozilla/dist/bin/enigmail-*-linux-*.xpi -d %{buildroot}%{enigmail_extname}
+unzip -q objdir/mozilla/dist/bin/enigmail-*-linux-*.xpi -d %{buildroot}%{enigmail_extname}
 
 
 %files
@@ -281,6 +280,9 @@ unzip -q mozilla/dist/bin/enigmail-*-linux-*.xpi -d %{buildroot}%{enigmail_extna
 #===============================================================================
 
 %changelog
+* Tue Jun 05 2012 Remi Collet <remi@fedoraproject.org> 1.4.2-1
+- Enigmail 1.4.2 for Thunderbird 13.0
+
 * Tue May 01 2012 Remi Collet <remi@fedoraproject.org> 1.4.1-2
 - spec cleanups
 
