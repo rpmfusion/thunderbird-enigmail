@@ -1,44 +1,41 @@
-%define debug_build       0
+%global debug_build 0
 
 # Use system Librairies ?
 %if 0%{?fedora} <= 17
-%define system_sqlite 0
+%global system_sqlite 0
 %else
-%define system_sqlite 1
+%global system_sqlite 1
 %endif
 
-%define build_langpacks 1
-
-%define nspr_version 4.9
-%define nss_version 3.13.3
-%define cairo_version 1.10.0
-%define freetype_version 2.1.9
-%define sqlite_version 3.7.10
-%define libnotify_version 0.4
+%global nspr_version 4.9
+%global nss_version 3.13.3
+%global cairo_version 1.10.0
+%global freetype_version 2.1.9
+%global sqlite_version 3.7.10
+%global libnotify_version 0.4
 %global libvpx_version 1.0.0
+%global _default_patch_fuzz 2
 
-%define thunderbird_app_id \{3550f703-e582-4d05-9a08-453d09bdfdc6\}
-
-%global thunver  12.0
-%global thunmax  13.0
+%global thunver  13.0
+%global thunmax  14.0
 
 # The tarball is pretty inconsistent with directory structure.
 # Sometimes there is a top level directory.  That goes here.
 #
 # IMPORTANT: If there is no top level directory, this should be 
 # set to the cwd, ie: '.'
-#%define tarballdir .
-%define tarballdir comm-release
+#define tarballdir .
+%global tarballdir comm-release
 
-%define official_branding 1
+%global official_branding 1
 
-%define mozappdir         %{_libdir}/thunderbird
+%global mozappdir         %{_libdir}/thunderbird
 %global enigmail_extname  %{_libdir}/mozilla/extensions/{3550f703-e582-4d05-9a08-453d09bdfdc6}/{847b3a00-7ab1-11d4-8f02-006008948af5}
 
 
 Summary:        Authentication and encryption extension for Mozilla Thunderbird
 Name:           thunderbird-enigmail
-Version:        1.4.1
+Version:        1.4.2
 %if 0%{?prever:1}
 Release:        0.1.%{prever}%{?dist}
 %else
@@ -47,7 +44,7 @@ Release:        1%{?dist}
 URL:            http://enigmail.mozdev.org/
 License:        MPLv1.1 or GPLv2+
 Group:          Applications/Internet
-Source0:        thunderbird-%{thunver}%{?thunbeta}.source.tar.bz2
+Source0:        ftp://ftp.mozilla.org/pub/thunderbird/releases/%{thunver}%{?pre_version}/source/thunderbird-%{thunver}%{?pre_version}.source.tar.bz2
 
 Source10:       thunderbird-mozconfig
 Source11:       thunderbird-mozconfig-branded
@@ -70,14 +67,11 @@ Patch7:         crashreporter-remove-static.patch
 Patch8:         xulrunner-10.0-secondary-ipc.patch
 
 # Build patches
-Patch102:       mozilla-733867-x.patch
-Patch103:       mozilla-file.patch
 Patch104:       xulrunner-10.0-gcc47.patch
+Patch105:       xulrunner-prtime.patch
+
 # Linux specific
 Patch200:       thunderbird-8.0-enable-addons.patch
-
-# ARM Specific 
-Patch210: 	mozilla-724615.patch
 
 
 %if %{official_branding}
@@ -88,8 +82,8 @@ Patch210: 	mozilla-724615.patch
 
 %endif
 
-BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildRequires:  nspr-devel >= %{nspr_version}
+BuildRequires:  nss-static
 BuildRequires:  nss-devel >= %{nss_version}
 BuildRequires:  cairo-devel >= %{cairo_version}
 BuildRequires:  libnotify-devel >= %{libnotify_version}
@@ -117,9 +111,7 @@ BuildRequires:  alsa-lib-devel
 BuildRequires:  autoconf213
 BuildRequires:  desktop-file-utils
 BuildRequires:  libcurl-devel
-BuildRequires:  yasm
 BuildRequires:  mesa-libGL-devel
-BuildRequires:  GConf2-devel
 BuildRequires:  libvpx-devel >= %{libvpx_version}
 
 ## For fixing lang
@@ -155,13 +147,11 @@ cd %{tarballdir}
 cd mozilla
 %patch7 -p2 -b .static
 %patch8 -p3 -b .secondary-ipc
-%patch103 -p1 -b .mozilla-file
 %patch104 -p1 -b .gcc47
+%patch105 -p1 -b .prtime
 cd ..
-%patch102 -p1 -b .733867
 
 %patch200 -p1 -b .addons
-%patch210 -p1 -b .724615
 
 %if %{official_branding}
 # Required by Mozilla Corporation
@@ -266,6 +256,9 @@ make -f client.mk build STRIP="/bin/true" MOZ_MAKE_FLAGS="$MOZ_SMP_FLAGS"
 # ===== Enigmail work =====
 pushd mailnews/extensions/enigmail
 ./makemake -r
+popd
+
+pushd objdir/mailnews/extensions/enigmail
 make
 make xpi
 popd
@@ -275,25 +268,24 @@ popd
 
 %install
 cd %{tarballdir}
-rm -rf $RPM_BUILD_ROOT
 
-mkdir -p $RPM_BUILD_ROOT%{enigmail_extname}
-
-unzip -q mozilla/dist/bin/enigmail-*-linux-*.xpi -d $RPM_BUILD_ROOT%{enigmail_extname}
-
-
-%clean
-rm -rf $RPM_BUILD_ROOT
+mkdir -p %{buildroot}%{enigmail_extname}
+unzip -q objdir/mozilla/dist/bin/enigmail-*-linux-*.xpi -d %{buildroot}%{enigmail_extname}
 
 
 %files
-%defattr(-,root,root,-)
 %{enigmail_extname}
 
 
 #===============================================================================
 
 %changelog
+* Tue Jun 05 2012 Remi Collet <remi@fedoraproject.org> 1.4.2-1
+- Enigmail 1.4.2 for Thunderbird 13.0
+
+* Tue May 01 2012 Remi Collet <remi@fedoraproject.org> 1.4.1-2
+- spec cleanups
+
 * Sat Apr 28 2012 Remi Collet <remi@fedoraproject.org> 1.4.1-1
 - Enigmail 1.4.1 for Thunderbird 12.0
 
