@@ -16,8 +16,8 @@
 %global libvpx_version 1.0.0
 %global _default_patch_fuzz 2
 
-%global thunver  14.0
-%global thunmax  15.0
+%global thunver  15.0
+%global thunmax  16.0
 
 # The tarball is pretty inconsistent with directory structure.
 # Sometimes there is a top level directory.  That goes here.
@@ -35,11 +35,11 @@
 
 Summary:        Authentication and encryption extension for Mozilla Thunderbird
 Name:           thunderbird-enigmail
-Version:        1.4.3
+Version:        1.4.4
 %if 0%{?prever:1}
 Release:        0.1.%{prever}%{?dist}
 %else
-Release:        1%{?dist}
+Release:        2%{?dist}
 %endif
 URL:            http://enigmail.mozdev.org/
 License:        MPLv1.1 or GPLv2+
@@ -63,7 +63,6 @@ Source100:      http://www.mozilla-enigmail.org/download/source/enigmail-%{versi
 
 # Mozilla (XULRunner) patches
 Patch0:         thunderbird-install-dir.patch
-Patch7:         crashreporter-remove-static.patch
 Patch8:         xulrunner-10.0-secondary-ipc.patch
 
 # Build patches
@@ -144,7 +143,6 @@ cd %{tarballdir}
 %patch0  -p2 -b .dir
 # Mozilla (XULRunner) patches
 cd mozilla
-%patch7 -p2 -b .static
 %patch8 -p3 -b .secondary-ipc
 %patch104 -p1 -b .gcc47
 cd ..
@@ -202,7 +200,7 @@ pushd mailnews/extensions/enigmail
 # All tarballs (as well as CVS) will *always* report as 1.4a1pre (or whatever
 # the next major version would be). This is because I create builds from trunk
 # and simply label the result as 1.3.x.
-sed -i -e '/em:version/s/1.5a1pre/%{version}/' package/install.rdf
+# sed -i -e '/em:version/s/1.5a1pre/%{version}/' package/install.rdf
 grep '<em:version>%{version}</em:version>' package/install.rdf || exit 1
 # Apply Enigmail patch here
 popd
@@ -278,6 +276,12 @@ unzip -q objdir/mozilla/dist/bin/enigmail-*-linux-*.xpi -d %{buildroot}%{enigmai
 #===============================================================================
 
 %changelog
+* Mon Aug 27 2012 Remi Collet <remi@fedoraproject.org> 1.4.4-2
+- Enigmail 1.4.4 for Thunderbird 15.0
+
+* Wed Aug 21 2012 Remi Collet <remi@fedoraproject.org> 1.4.4-1
+- Enigmail 1.4.4 for Thunderbird 14.0
+
 * Sat Jul 21 2012 Remi Collet <remi@fedoraproject.org> 1.4.3-1
 - Enigmail 1.4.3 for Thunderbird 14.0
 
